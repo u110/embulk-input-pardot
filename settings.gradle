@@ -1,0 +1,2 @@
+rootProject.name = "embulk-input-pardot"
+include "shadow-pardot-helper"

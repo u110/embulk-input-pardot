@@ -1,10 +1,10 @@
 plugins {
-    id "com.jfrog.bintray" version "1.1"
-    id "com.github.jruby-gradle.base" version "1.5.0"
     id "java"
     id "checkstyle"
+    id "maven-publish"
+    id "com.github.johnrengelman.shadow" version "5.2.0" apply false
+    id "org.embulk.embulk-plugins" version "0.4.2"
 }
-import com.github.jrubygradle.JRubyExec
 
 repositories {
     mavenCentral()
@@ -14,24 +14,43 @@ configurations {
     provided
 }
 
-version = "0.1.0"
-
+group = "io.trocco"
+version = "0.0.1"
+description = "Pardot input plugin for Embulk"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile "org.embulk:embulk-core:0.9.23"
-    provided "org.embulk:embulk-core:0.9.23"
-    // compile "YOUR_JAR_DEPENDENCY_GROUP:YOUR_JAR_DEPENDENCY_MODULE:YOUR_JAR_DEPENDENCY_VERSION"
-    testCompile "junit:junit:4.+"
+    compileOnly "org.embulk:embulk-core:0.9.23"
+    compile project(path: ":shadow-pardot-helper", configuration: "shadow")
+    testCompile "junit:junit:4.13"
+    testCompile 'org.embulk:embulk-standards:0.9.23'
+    testCompile 'org.embulk:embulk-test:0.9.23'
+    testCompile "org.mockito:mockito-core:1.10.19"
+    testCompile "org.embulk:embulk-core:0.9.23:tests"
+    testCompile "org.embulk:embulk-deps-buffer:0.9.23"
+    testCompile "org.embulk:embulk-deps-config:0.9.23"
 }
 
-task classpath(type: Copy, dependsOn: ["jar"]) {
-    doFirst { file("classpath").deleteDir() }
-    from(configurations.runtime - configurations.provided + files(jar.archivePath))
-    into "classpath"
+embulkPlugin {
+    mainClass = "org.embulk.input.pardot.PardotInputPlugin"
+    category = "input"
+    type = "pardot"
 }
-clean { delete "classpath" }
+
+publishing {
+    publications {
+        embulkPluginMaven(MavenPublication) {
+            // Publish it with "publishEmbulkPluginMavenPublicationToMavenRepository".
+            from components.java  // Must be "components.java". The dependency modification works only for it.
+        }
+    }
+    repositories {
+        maven {
+            url = "${project.buildDir}/mavenPublishLocal"
+        }
+    }
+}
 
 checkstyle {
     configFile = file("${project.rootDir}/config/checkstyle/checkstyle.xml")
@@ -50,51 +69,15 @@ task checkstyle(type: Checkstyle) {
     source = sourceSets.main.allJava + sourceSets.test.allJava
 }
 
-task gem(type: JRubyExec, dependsOn: ["gemspec", "classpath"]) {
-    jrubyArgs "-S"
-    script "gem"
-    scriptArgs "build", "${project.name}.gemspec"
-    doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "pkg") }
+gem {
+    from("LICENSE")  // Optional -- if you need other files in the gem.
+    authors = ["u110"]
+    email = ["web.u.project@gmail.com"]
+    summary = "${description}"
+    homepage = "https://github.com/u110/embulk-input-pardot"
+    licenses = ["Apache-2.0"]
 }
 
-task gemPush(type: JRubyExec, dependsOn: ["gem"]) {
-    jrubyArgs "-S"
-    script "gem"
-    scriptArgs "push", "pkg/${project.name}-${project.version}.gem"
+gemPush {
+    host = "https://rubygems.org"
 }
-
-task "package"(dependsOn: ["gemspec", "classpath"]) {
-    doLast {
-        println "> Build succeeded."
-        println "> You can run embulk with '-L ${file(".").absolutePath}' argument."
-    }
-}
-
-task gemspec {
-    ext.gemspecFile = file("${project.name}.gemspec")
-    inputs.file "build.gradle"
-    outputs.file gemspecFile
-    doLast {
-        gemspecFile.write($/
-Gem::Specification.new do |spec|
-  spec.name          = "${project.name}"
-  spec.version       = "${project.version}"
-  spec.authors       = ["u110"]
-  spec.summary       = %[Pardot input plugin for Embulk]
-  spec.description   = %[Loads records from Pardot.]
-  spec.email         = ["web.u.project@gmail.com"]
-  spec.licenses      = ["MIT"]
-  # TODO set this: spec.homepage      = "https://github.com/u110/embulk-input-pardot"
-
-  spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
-  spec.test_files    = spec.files.grep(%r"^(test|spec)/")
-  spec.require_paths = ["lib"]
-
-  #spec.add_dependency 'YOUR_GEM_DEPENDENCY', ['~> YOUR_GEM_DEPENDENCY_VERSION']
-  spec.add_development_dependency 'bundler', ['~> 1.0']
-  spec.add_development_dependency 'rake', ['~> 12.0']
-end
-/$)
-    }
-}
-clean { delete "${project.name}.gemspec" }

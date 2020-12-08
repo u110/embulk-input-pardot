@@ -1,0 +1,43 @@
+/*
+ * A helper artifact to have the Google Ads client with some transitive dependencies relocated.
+ *
+ * This helper JAR is built separate from each plugin main JAR so that an impact of package relocation is
+ * closed within the helper JAR, not to impact the plugin main JAR.
+ */
+
+apply plugin: "java"
+apply plugin: "com.github.johnrengelman.shadow"
+
+repositories {
+    mavenCentral()
+}
+
+group = "io.trocco"
+version = "${rootProject.version}"
+description = "A helper library for Pardot input plugin for embulk"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+configurations {
+    runtimeClasspath {
+        resolutionStrategy.activateDependencyLocking()
+    }
+    shadow {
+        resolutionStrategy.activateDependencyLocking()
+        transitive = false
+    }
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/com.darksci/pardot-api-client
+    compile group: 'com.darksci', name: 'pardot-api-client', version: '3.1.0'
+}
+
+// Relocate Guava and Jackson packages since they are incompatible from Embulk's.
+shadowJar {
+    mergeServiceFiles()
+    relocate "com.google.common", "embulk.pardot.com.google.common"
+    relocate "com.google.thirdparty.publicsuffix", "embulk.pardot.com.google.thirdparty.publicsuffix"
+    relocate "com.fasterxml.jackson", "embulk.pardot.com.fasterxml.jackson"
+}
