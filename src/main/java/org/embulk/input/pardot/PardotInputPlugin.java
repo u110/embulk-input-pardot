@@ -1,9 +1,17 @@
 package org.embulk.input.pardot;
 
-import java.util.List;
-
+import com.darksci.pardot.api.PardotClient;
+import com.darksci.pardot.api.config.Configuration;
+import com.darksci.pardot.api.request.DateParameter;
+import com.darksci.pardot.api.request.email.EmailStatsRequest;
+import com.darksci.pardot.api.request.login.LoginRequest;
+import com.darksci.pardot.api.request.visitoractivity.VisitorActivityQueryRequest;
+import com.darksci.pardot.api.request.visitoractivity.VisitorActivityReadRequest;
+import com.darksci.pardot.api.response.email.EmailStatsResponse;
+import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
+import com.darksci.pardot.api.response.visitoractivity.VisitorActivityQueryResponse;
 import com.google.common.base.Optional;
-
+import com.google.common.collect.ImmutableList;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -11,44 +19,82 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
+import org.embulk.spi.Column;
 import org.embulk.spi.Exec;
 import org.embulk.spi.InputPlugin;
+import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
+import org.embulk.spi.time.TimestampParser;
+import org.embulk.spi.type.Types;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.darksci.pardot.api.ConfigurationBuilder;
+
+import java.util.List;
 
 public class PardotInputPlugin
         implements InputPlugin
 {
-    public interface PluginTask
-            extends Task
-    {
-        // configuration option 1 (required integer)
-        @Config("option1")
-        public int getOption1();
-
-        // configuration option 2 (optional string, null is not allowed)
-        @Config("option2")
-        @ConfigDefault("\"myvalue\"")
-        public String getOption2();
-
-        // configuration option 3 (optional string, null is allowed)
-        @Config("option3")
-        @ConfigDefault("null")
-        public Optional<String> getOption3();
-
-        // if you get schema from config
-        @Config("columns")
-        public SchemaConfig getColumns();
-    }
+    private final Logger logger = LoggerFactory.getLogger(PardotInputPlugin.class);
 
     @Override
     public ConfigDiff transaction(ConfigSource config,
-            InputPlugin.Control control)
+                                  InputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
-        Schema schema = task.getColumns().toSchema();
+        ImmutableList.Builder<Column> columns = ImmutableList.builder();
+        int i = 0;
+        //<id> integer
+        columns.add(new Column(i++, "id", Types.LONG));
+        //<prospect_id> integer
+        columns.add(new Column(i++, "prospect_id", Types.LONG));
+        //<visitor_id> integer
+        columns.add(new Column(i++, "visitor_id", Types.LONG));
+        //<type> integer
+        columns.add(new Column(i++, "type", Types.LONG));
+        //<type_name> string
+        columns.add(new Column(i++, "type_name", Types.STRING));
+        //<details> string
+        columns.add(new Column(i++, "details", Types.STRING));
+        //<email_id> integer
+        columns.add(new Column(i++, "email_id", Types.LONG));
+        //<email_template_id> integer
+        columns.add(new Column(i++, "email_template_id", Types.LONG));
+        //<list_email_id> integer
+        columns.add(new Column(i++, "list_email_id", Types.LONG));
+        //<form_id> integer
+        columns.add(new Column(i++, "form_id", Types.LONG));
+        //<form_handler_id> integer
+        columns.add(new Column(i++, "form_handler_id", Types.LONG));
+        //<site_search_query_id> integer
+        columns.add(new Column(i++, "site_search_query_id", Types.LONG));
+        //<landing_page_id> integer
+        columns.add(new Column(i++, "landing_page_id", Types.LONG));
+        //<paid_search_ad_id> integer
+        columns.add(new Column(i++, "paid_search_id", Types.LONG));
+        //<multivariate_test_variation_id> integer
+        columns.add(new Column(i++, "multivariate_test_variation_id", Types.LONG));
+        //<visitor_page_view_id> integer
+        columns.add(new Column(i++, "visitor_page_view_id", Types.LONG));
+        //<file_id> integer
+        columns.add(new Column(i++, "file_id", Types.LONG));
+        //<custom_redirect_id> integer
+        // columns.add(new Column(i++, "custom_redirect_id", Types.LONG)); // INFO not found on api client
+        //<campaign> object
+        // columns.add(new Column(i++, "campaign", Types.STRING));
+        columns.add(new Column(i++, "campaign_id", Types.LONG));
+        columns.add(new Column(i++, "campaign_name", Types.STRING));
+        columns.add(new Column(i++, "campaign_cost", Types.LONG));
+        columns.add(new Column(i++, "campaign_folder_id", Types.LONG));
+        //<created_at> timestamp
+        columns.add(new Column(i++, "created_at", Types.TIMESTAMP));
+        //<updated_at> timestamp
+        //columns.add(new Column(i++, "timestamp", Types.TIMESTAMP)); // INFO not found on api client
+
+        final Schema schema = new Schema(columns.build());
         int taskCount = 1;  // number of run() method calls
 
         return resume(task.dump(), schema, taskCount, control);
@@ -56,8 +102,8 @@ public class PardotInputPlugin
 
     @Override
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int taskCount,
-            InputPlugin.Control control)
+                             Schema schema, int taskCount,
+                             InputPlugin.Control control)
     {
         control.run(taskSource, schema, taskCount);
         return Exec.newConfigDiff();
@@ -65,25 +111,263 @@ public class PardotInputPlugin
 
     @Override
     public void cleanup(TaskSource taskSource,
-            Schema schema, int taskCount,
-            List<TaskReport> successTaskReports)
+                        Schema schema, int taskCount,
+                        List<TaskReport> successTaskReports)
     {
     }
 
     @Override
     public TaskReport run(TaskSource taskSource,
-            Schema schema, int taskIndex,
-            PageOutput output)
+                          Schema schema, int taskIndex,
+                          PageOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
+        try {
+            final ConfigurationBuilder configBuilder;
+            final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output);
+            if (task.getUserKey().isPresent()) {
+                logger.warn("user_key will deprecate in spring 2021 see https://help.salesforce.com/articleView?id=000353746&type=1&mode=1&language=en_US&utm_source=techcomms&utm_medium=email&utm_campaign=eol");
+                configBuilder = Configuration.newBuilder()
+                        .withUsernameAndPasswordLogin(
+                                task.getUserName(),
+                                task.getPassword(),
+                                task.getUserKey().get()
+                        );
+            }
+            else {
+                logger.warn("use client_id / client_secret");
+                if (task.getAppClientId().isPresent()
+                        && task.getAppClientSecret().isPresent()
+                        && task.getBusinessUnitId().isPresent()) {
+                    configBuilder = Configuration.newBuilder()
+                            .withSsoLogin(
+                                    task.getUserName(),
+                                    task.getPassword(),
+                                    task.getAppClientId().get(),
+                                    task.getAppClientSecret().get(),
+                                    task.getBusinessUnitId().get()
+                            );
+                }
+                else {
+                    throw new Exception("please set app_client_id, app_client_secret, business_unit_id");
+                }
+            }
 
-        // Write your code here :)
-        throw new UnsupportedOperationException("PardotInputPlugin.run method is not implemented yet");
+            // Create config
+            Configuration testConfig = configBuilder.build();
+            PardotClient pardotClient = new PardotClient(configBuilder);
+            VisitorActivityQueryRequest req = new VisitorActivityQueryRequest();
+            if (task.getCreatedBefore().isPresent()) {
+                req = req.withCreatedBefore(new DateParameter(task.getCreatedBefore().get()));
+            }
+            if (task.getCreatedAfter().isPresent()) {
+                req = req.withCreatedAfter(new DateParameter(task.getCreatedAfter().get()));
+            }
+
+            // exec request
+            VisitorActivityQueryResponse.Result res = pardotClient.visitorActivityQuery(req);
+            logger.warn("total results: {}", res.getTotalResults().toString());
+            for (VisitorActivity va : res.getVisitorActivities()) {
+                final TimestampParser parser = TimestampParser.of("%Y-%m-%d", "UTC");
+                int i = 0;
+                if (va.getId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getId());
+                }
+                if (va.getProspectId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getProspectId());
+                }
+
+                if (va.getVisitorId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getVisitorId());
+                }
+
+                if (va.getType() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getType());
+                }
+
+                if (va.getTypeName() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setString(schema.getColumn(i++), va.getTypeName());
+
+                }
+
+                if (va.getDetails() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setString(schema.getColumn(i++), va.getDetails());
+
+                }
+
+                if (va.getEmailId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getEmailId());
+                }
+
+                if (va.getEmailTemplateId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getEmailTemplateId());
+                }
+
+                if (va.getListEmailId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getListEmailId());
+                }
+
+                if (va.getFormId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getFormId());
+                }
+
+                if (va.getFormHandlerId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getFormHandlerId());
+                }
+
+                if (va.getSiteSearchQueryId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getSiteSearchQueryId());
+                }
+
+                if (va.getLandingPageId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getLandingPageId());
+                }
+
+                if (va.getPaidSearchId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getPaidSearchId());
+                }
+
+                if (va.getMultivariateTestVariationId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getMultivariateTestVariationId());
+                }
+
+                if (va.getVisitorPageViewId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getVisitorPageViewId());
+                }
+
+                if (va.getFileId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getFileId());
+                }
+
+                if (va.getCampaign().getId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getCampaign().getId());
+                }
+                if (va.getCampaign().getName() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setString(schema.getColumn(i++), va.getCampaign().getName());
+                }
+                if (va.getCampaign().getCost() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getCampaign().getCost());
+                }
+                if (va.getCampaign().getFolderId() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setLong(schema.getColumn(i++), va.getCampaign().getFolderId());
+                }
+
+                if (va.getCreatedAt() == null) {
+                    pageBuilder.setNull(schema.getColumn(i++));
+                }
+                else {
+                    pageBuilder.setTimestamp(schema.getColumn(i++), parser.parse(va.getCreatedAt().toString()));
+                }
+                pageBuilder.addRecord();
+            }
+            pageBuilder.finish();
+        }
+        catch (Exception e) {
+            logger.error(e.toString());
+        }
+        return Exec.newTaskReport();
     }
 
     @Override
     public ConfigDiff guess(ConfigSource config)
     {
         return Exec.newConfigDiff();
+    }
+
+    public interface PluginTask
+            extends Task
+    {
+        @Config("user_name")
+        String getUserName();
+
+        @Config("password")
+        String getPassword();
+
+        @Config("user_key")
+        @ConfigDefault("null")
+        Optional<String> getUserKey();
+
+        @Config("app_client_id")
+        @ConfigDefault("null")
+        Optional<String> getAppClientId();
+
+        @Config("app_client_secret")
+        @ConfigDefault("null")
+        Optional<String> getAppClientSecret();
+
+        @Config("business_unit_id")
+        @ConfigDefault("null")
+        Optional<String> getBusinessUnitId();
+
+        @Config("created_before")
+        @ConfigDefault("null")
+        Optional<String> getCreatedBefore();
+
+        @Config("created_after")
+        @ConfigDefault("null")
+        Optional<String> getCreatedAfter();
     }
 }

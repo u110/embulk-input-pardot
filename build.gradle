@@ -79,5 +79,5 @@ gem {
 }
 
 gemPush {
-    host = "https://rubygems.org"
+    host = "https://rubygems.pkg.github.com/u110"
 }
