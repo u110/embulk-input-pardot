@@ -68,25 +68,32 @@ public class PardotInputPlugin
         PluginTask task = taskSource.loadTask(PluginTask.class);
         try {
             final ConfigurationBuilder configBuilder;
-            if (!task.getUserKey().equals("")) {
+            if (task.getUserKey().isPresent()) {
                 logger.warn("user_key will deprecate in spring 2021 see https://help.salesforce.com/articleView?id=000353746&type=1&mode=1&language=en_US&utm_source=techcomms&utm_medium=email&utm_campaign=eol");
                 configBuilder = Configuration.newBuilder()
                         .withUsernameAndPasswordLogin(
                                 task.getUserName(),
                                 task.getPassword(),
-                                task.getUserKey()
+                                task.getUserKey().toString()
                         );
             }
             else {
-                configBuilder = Configuration.newBuilder()
-                        .withSsoLogin(
-                                task.getUserName(),
-                                task.getPassword(),
-                                task.getAppClientId(),
-                                task.getAppClientSecret(),
-                                task.getBusinessUnitId()
-                        );
-
+                logger.warn("use client_id / client_secret");
+                if (task.getAppClientId().isPresent()
+                        && task.getAppClientSecret().isPresent()
+                        && task.getBusinessUnitId().isPresent()) {
+                    configBuilder = Configuration.newBuilder()
+                            .withSsoLogin(
+                                    task.getUserName(),
+                                    task.getPassword(),
+                                    task.getAppClientId().toString(),
+                                    task.getAppClientSecret().toString(),
+                                    task.getBusinessUnitId().toString()
+                            );
+                }
+                else {
+                    throw new Exception("please set app_client_id, app_client_secret, business_unit_id");
+                }
             }
 
             // Create config
@@ -94,7 +101,7 @@ public class PardotInputPlugin
             PardotClient pardotClient = new PardotClient(configBuilder);
             VisitorActivityQueryRequest req = new VisitorActivityQueryRequest();
             VisitorActivityQueryResponse.Result res = pardotClient.visitorActivityQuery(req);
-            logger.info("total results: {}", res.getTotalResults().toString());
+            logger.warn("total results: {}", res.getTotalResults().toString());
         }
         catch (Exception e) {
             logger.error(e.toString());
@@ -118,20 +125,20 @@ public class PardotInputPlugin
         String getPassword();
 
         @Config("user_key")
-        @ConfigDefault("")
-        String getUserKey();
+        @ConfigDefault("null")
+        Optional<String> getUserKey();
 
         @Config("app_client_id")
-        @ConfigDefault("")
-        String getAppClientId();
+        @ConfigDefault("null")
+        Optional<String> getAppClientId();
 
         @Config("app_client_secret")
-        @ConfigDefault("")
-        String getAppClientSecret();
+        @ConfigDefault("null")
+        Optional<String> getAppClientSecret();
 
         @Config("business_unit_id")
-        @ConfigDefault("")
-        String getBusinessUnitId();
+        @ConfigDefault("null")
+        Optional<String> getBusinessUnitId();
 
         @Config("columns")
         SchemaConfig getColumns();
