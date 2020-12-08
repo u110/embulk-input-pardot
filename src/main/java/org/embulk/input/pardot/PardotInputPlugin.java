@@ -1,9 +1,14 @@
 package org.embulk.input.pardot;
 
-import java.util.List;
-
+import com.darksci.pardot.api.PardotClient;
+import com.darksci.pardot.api.config.Configuration;
+import com.darksci.pardot.api.request.email.EmailStatsRequest;
+import com.darksci.pardot.api.request.visitoractivity.VisitorActivityQueryRequest;
+import com.darksci.pardot.api.request.visitoractivity.VisitorActivityReadRequest;
+import com.darksci.pardot.api.response.email.EmailStatsResponse;
+import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
+import com.darksci.pardot.api.response.visitoractivity.VisitorActivityQueryResponse;
 import com.google.common.base.Optional;
-
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -16,35 +21,20 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.darksci.pardot.api.ConfigurationBuilder;
+
+import java.util.List;
 
 public class PardotInputPlugin
         implements InputPlugin
 {
-    public interface PluginTask
-            extends Task
-    {
-        // configuration option 1 (required integer)
-        @Config("option1")
-        public int getOption1();
-
-        // configuration option 2 (optional string, null is not allowed)
-        @Config("option2")
-        @ConfigDefault("\"myvalue\"")
-        public String getOption2();
-
-        // configuration option 3 (optional string, null is allowed)
-        @Config("option3")
-        @ConfigDefault("null")
-        public Optional<String> getOption3();
-
-        // if you get schema from config
-        @Config("columns")
-        public SchemaConfig getColumns();
-    }
+    private final Logger logger = LoggerFactory.getLogger(PardotInputPlugin.class);
 
     @Override
     public ConfigDiff transaction(ConfigSource config,
-            InputPlugin.Control control)
+                                  InputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
@@ -56,8 +46,8 @@ public class PardotInputPlugin
 
     @Override
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int taskCount,
-            InputPlugin.Control control)
+                             Schema schema, int taskCount,
+                             InputPlugin.Control control)
     {
         control.run(taskSource, schema, taskCount);
         return Exec.newConfigDiff();
@@ -65,25 +55,85 @@ public class PardotInputPlugin
 
     @Override
     public void cleanup(TaskSource taskSource,
-            Schema schema, int taskCount,
-            List<TaskReport> successTaskReports)
+                        Schema schema, int taskCount,
+                        List<TaskReport> successTaskReports)
     {
     }
 
     @Override
     public TaskReport run(TaskSource taskSource,
-            Schema schema, int taskIndex,
-            PageOutput output)
+                          Schema schema, int taskIndex,
+                          PageOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
+        try {
+            final ConfigurationBuilder configBuilder;
+            if (!task.getUserKey().equals("")) {
+                logger.warn("user_key will deprecate in spring 2021 see https://help.salesforce.com/articleView?id=000353746&type=1&mode=1&language=en_US&utm_source=techcomms&utm_medium=email&utm_campaign=eol");
+                configBuilder = Configuration.newBuilder()
+                        .withUsernameAndPasswordLogin(
+                                task.getUserName(),
+                                task.getPassword(),
+                                task.getUserKey()
+                        );
+            }
+            else {
+                configBuilder = Configuration.newBuilder()
+                        .withSsoLogin(
+                                task.getUserName(),
+                                task.getPassword(),
+                                task.getAppClientId(),
+                                task.getAppClientSecret(),
+                                task.getBusinessUnitId()
+                        );
 
-        // Write your code here :)
-        throw new UnsupportedOperationException("PardotInputPlugin.run method is not implemented yet");
+            }
+
+            // Create config
+            Configuration testConfig = configBuilder.build();
+            PardotClient pardotClient = new PardotClient(configBuilder);
+            VisitorActivityQueryRequest req = new VisitorActivityQueryRequest();
+            VisitorActivityQueryResponse.Result res = pardotClient.visitorActivityQuery(req);
+            logger.info("total results: {}", res.getTotalResults().toString());
+        }
+        catch (Exception e) {
+            logger.error(e.toString());
+        }
+        return Exec.newTaskReport();
     }
 
     @Override
     public ConfigDiff guess(ConfigSource config)
     {
         return Exec.newConfigDiff();
+    }
+
+    public interface PluginTask
+            extends Task
+    {
+        @Config("user_name")
+        String getUserName();
+
+        @Config("password")
+        String getPassword();
+
+        @Config("user_key")
+        @ConfigDefault("")
+        String getUserKey();
+
+        @Config("app_client_id")
+        @ConfigDefault("")
+        String getAppClientId();
+
+        @Config("app_client_secret")
+        @ConfigDefault("")
+        String getAppClientSecret();
+
+        @Config("business_unit_id")
+        @ConfigDefault("")
+        String getBusinessUnitId();
+
+        @Config("columns")
+        SchemaConfig getColumns();
     }
 }
