@@ -369,9 +369,5 @@ public class PardotInputPlugin
         @Config("created_after")
         @ConfigDefault("null")
         Optional<String> getCreatedAfter();
-
-        // TODO: remove
-        @Config("columns")
-        SchemaConfig getColumns();
     }
 }

@@ -1,14 +1,10 @@
 in:
   type: pardot
-  option1: 1
-  option2: example2
-  columns:
-    - { name: hoge, type: string}
   user_name: web.u.project@gmail.com
-  password: password**
-  user_key: user-key**
-  app_client_id: app-client-id**
-  app_client_secret: app-client-secret**
-  business_unit_id: business-unit-id**
-  created_before: 2020-12-01
-  created_after: 2020-12-02
+  password: password-value
+  user_key: user-key-value
+  app_client_id: app-client-id
+  app_client_secret: app-client-secret-value
+  business_unit_id: business-unit-id
+  created_after: 2020-12-01
+  created_before: 2020-12-02
