@@ -123,40 +123,13 @@ public class PardotInputPlugin
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         try {
-            final ConfigurationBuilder configBuilder;
             final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output);
-            if (task.getUserKey().isPresent()) {
-                logger.warn("user_key will deprecate in spring 2021 see https://help.salesforce.com/articleView?id=000353746&type=1&mode=1&language=en_US&utm_source=techcomms&utm_medium=email&utm_campaign=eol");
-                configBuilder = Configuration.newBuilder()
-                        .withUsernameAndPasswordLogin(
-                                task.getUserName(),
-                                task.getPassword(),
-                                task.getUserKey().get()
-                        );
-            }
-            else {
-                logger.warn("use client_id / client_secret");
-                if (task.getAppClientId().isPresent()
-                        && task.getAppClientSecret().isPresent()
-                        && task.getBusinessUnitId().isPresent()) {
-                    configBuilder = Configuration.newBuilder()
-                            .withSsoLogin(
-                                    task.getUserName(),
-                                    task.getPassword(),
-                                    task.getAppClientId().get(),
-                                    task.getAppClientSecret().get(),
-                                    task.getBusinessUnitId().get()
-                            );
-                }
-                else {
-                    throw new Exception("please set app_client_id, app_client_secret, business_unit_id");
-                }
-            }
+            final PardotClient pardotClient = getClient(task);
 
-            // Create config
-            Configuration testConfig = configBuilder.build();
-            PardotClient pardotClient = new PardotClient(configBuilder);
             VisitorActivityQueryRequest req = new VisitorActivityQueryRequest();
+            if (task.getFetchRowLimit().isPresent()) {
+                req = req.withLimit(task.getFetchRowLimit().get());
+            }
             if (task.getCreatedBefore().isPresent()) {
                 req = req.withCreatedBefore(new DateParameter(task.getCreatedBefore().get()));
             }
@@ -164,171 +137,66 @@ public class PardotInputPlugin
                 req = req.withCreatedAfter(new DateParameter(task.getCreatedAfter().get()));
             }
 
-            // exec request
-            VisitorActivityQueryResponse.Result res = pardotClient.visitorActivityQuery(req);
-            logger.warn("total results: {}", res.getTotalResults().toString());
-            for (VisitorActivity va : res.getVisitorActivities()) {
-                final TimestampParser parser = TimestampParser.of("%Y-%m-%d", "UTC");
-                int i = 0;
-                if (va.getId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
+            Integer totalResults;
+            VisitorActivityQueryResponse.Result res;
+            Integer rowIndex = 0;
+            do {
+                req = req.withOffset(rowIndex);
+                // exec request
+                res = pardotClient.visitorActivityQuery(req);
+                if (res.getVisitorActivities() != null) {
+                    rowIndex += res.getVisitorActivities().size();
                 }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getId());
+                totalResults = res.getTotalResults();
+                logger.warn("total results: {}", totalResults);
+                for (VisitorActivity va : res.getVisitorActivities()) {
+                    schema.visitColumns(new ColVisitor(new Accessor(task, va), pageBuilder, task));
+                    pageBuilder.addRecord();
                 }
-                if (va.getProspectId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getProspectId());
-                }
-
-                if (va.getVisitorId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getVisitorId());
-                }
-
-                if (va.getType() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getType());
-                }
-
-                if (va.getTypeName() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setString(schema.getColumn(i++), va.getTypeName());
-
-                }
-
-                if (va.getDetails() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setString(schema.getColumn(i++), va.getDetails());
-
-                }
-
-                if (va.getEmailId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getEmailId());
-                }
-
-                if (va.getEmailTemplateId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getEmailTemplateId());
-                }
-
-                if (va.getListEmailId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getListEmailId());
-                }
-
-                if (va.getFormId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getFormId());
-                }
-
-                if (va.getFormHandlerId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getFormHandlerId());
-                }
-
-                if (va.getSiteSearchQueryId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getSiteSearchQueryId());
-                }
-
-                if (va.getLandingPageId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getLandingPageId());
-                }
-
-                if (va.getPaidSearchId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getPaidSearchId());
-                }
-
-                if (va.getMultivariateTestVariationId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getMultivariateTestVariationId());
-                }
-
-                if (va.getVisitorPageViewId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getVisitorPageViewId());
-                }
-
-                if (va.getFileId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getFileId());
-                }
-
-                if (va.getCampaign().getId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getCampaign().getId());
-                }
-                if (va.getCampaign().getName() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setString(schema.getColumn(i++), va.getCampaign().getName());
-                }
-                if (va.getCampaign().getCost() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getCampaign().getCost());
-                }
-                if (va.getCampaign().getFolderId() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setLong(schema.getColumn(i++), va.getCampaign().getFolderId());
-                }
-
-                if (va.getCreatedAt() == null) {
-                    pageBuilder.setNull(schema.getColumn(i++));
-                }
-                else {
-                    pageBuilder.setTimestamp(schema.getColumn(i++), parser.parse(va.getCreatedAt().toString()));
-                }
-                pageBuilder.addRecord();
+                pageBuilder.flush();
+                logger.warn("fetched rows: {} total: {}", rowIndex, totalResults);
             }
+            while(rowIndex < totalResults);
+
             pageBuilder.finish();
         }
         catch (Exception e) {
             logger.error(e.toString());
         }
         return Exec.newTaskReport();
+    }
+
+    private PardotClient getClient(PluginTask task) throws Exception
+    {
+        final ConfigurationBuilder configBuilder;
+        if (task.getUserKey().isPresent()) {
+            logger.warn("user_key will deprecate in spring 2021 see https://help.salesforce.com/articleView?id=000353746&type=1&mode=1&language=en_US&utm_source=techcomms&utm_medium=email&utm_campaign=eol");
+            configBuilder = Configuration.newBuilder()
+                    .withUsernameAndPasswordLogin(
+                            task.getUserName(),
+                            task.getPassword(),
+                            task.getUserKey().get()
+                    );
+        }
+        else {
+            logger.warn("use client_id / client_secret");
+            if (task.getAppClientId().isPresent()
+                    && task.getAppClientSecret().isPresent()
+                    && task.getBusinessUnitId().isPresent()) {
+                configBuilder = Configuration.newBuilder()
+                        .withSsoLogin(
+                                task.getUserName(),
+                                task.getPassword(),
+                                task.getAppClientId().get(),
+                                task.getAppClientSecret().get(),
+                                task.getBusinessUnitId().get()
+                        );
+            }
+            else {
+                throw new Exception("please set app_client_id, app_client_secret, business_unit_id");
+            }
+        }
+        return new PardotClient(configBuilder);
     }
 
     @Override
@@ -369,5 +237,9 @@ public class PardotInputPlugin
         @Config("created_after")
         @ConfigDefault("null")
         Optional<String> getCreatedAfter();
+
+        @Config("fetch_row_limit")
+        @ConfigDefault("200")
+        Optional<Integer> getFetchRowLimit();
     }
 }
