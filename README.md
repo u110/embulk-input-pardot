@@ -1,6 +1,7 @@
 # Pardot input plugin for Embulk
 
-TODO: Write short description here and build.gradle file.
+Now only 'Querying Visitor Activities' is supported.
+- https://developer.pardot.com/kb/api-version-4/visitor-activities/
 
 ## Overview
 
@@ -21,6 +22,7 @@ TODO: Write short description here and build.gradle file.
   - today, yesterday, last_7_days, this_month, last_month, <custom_time>
 - **created_before**: Selects visitor activities created before the specified time. If a <custom_time> is used, ensure that the specified date is formatted using GNU Date Input Syntax.
   - today, yesterday, last_7_days, this_month, last_month, <custom_time>
+- **fetch_row_limit**: Specifies the number of results(per 1 request) to be returned. Default value: 200. Note: This number cannot be larger than 200.
 
 see API document
 - https://developer.pardot.com/kb/api-version-4/visitor-activities/
