@@ -64,7 +64,7 @@ public class Accessor
             return res.toString();
         }
         catch (Exception e) {
-            logger.warn("{} name: {}", e, name);
+            logger.warn("Accessor error: {} name: {}", e, name);
         }
         return null;
     }
