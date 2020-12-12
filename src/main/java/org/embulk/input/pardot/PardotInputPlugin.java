@@ -136,6 +136,18 @@ public class PardotInputPlugin
             if (task.getCreatedAfter().isPresent()) {
                 req = req.withCreatedAfter(new DateParameter(task.getCreatedAfter().get()));
             }
+            if (task.getActivityTypeIds().isPresent()) {
+                req = req.withActivityTypeIds(task.getActivityTypeIds().get());
+            }
+            if (task.getProspectIds().isPresent()) {
+                req = req.withProspectIds(task.getProspectIds().get());
+            }
+            if (task.getSortKey().isPresent()) {
+                req = req.withSortBy(task.getSortKey().get());
+            }
+            if (task.getSortOrder().isPresent()) {
+                req = req.withSortOrder(task.getSortOrder().get());
+            }
 
             Integer totalResults;
             VisitorActivityQueryResponse.Result res;
@@ -241,5 +253,21 @@ public class PardotInputPlugin
         @Config("fetch_row_limit")
         @ConfigDefault("200")
         Optional<Integer> getFetchRowLimit();
+
+        @Config("activity_type_ids")
+        @ConfigDefault("null")
+        Optional<List<Integer>> getActivityTypeIds();
+
+        @Config("prospect_ids")
+        @ConfigDefault("null")
+        Optional<List<Long>> getProspectIds();
+
+        @Config("sort_key")
+        @ConfigDefault("null")
+        Optional<String> getSortKey();
+
+        @Config("sort_order")
+        @ConfigDefault("null")
+        Optional<String> getSortOrder();
     }
 }
