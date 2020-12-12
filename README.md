@@ -23,6 +23,12 @@ Now only 'Querying Visitor Activities' is supported.
 - **created_before**: Selects visitor activities created before the specified time. If a <custom_time> is used, ensure that the specified date is formatted using GNU Date Input Syntax.
   - today, yesterday, last_7_days, this_month, last_month, <custom_time>
 - **fetch_row_limit**: Specifies the number of results(per 1 request) to be returned. Default value: 200. Note: This number cannot be larger than 200.
+- **activity_type_ids**: Selects visitor activities of the specified types. See a list of available [Visitor Activity Types](https://developer.pardot.com/kb/object-field-references/#visitor-activity-types) in [Visitor Activity](https://developer.pardot.com/kb/object-field-references/#visitor-activity) in [Object Field References](https://developer.pardot.com/kb/object-field-references/).
+- **prospect_ids**: Selects only visitor activities associated with one of the specified prospect IDs.
+- **sort_key**: Specifies the field to be used to sort the results of the query.
+  - created_at, id, prospect_id, visitor_id
+- **sort_order**: Specifies the ordering to be used when sorting the results of the query. The default value varies based on the value of the sort_by parameter
+  - descending(default), ascending
 
 see API document
 - https://developer.pardot.com/kb/api-version-4/visitor-activities/
@@ -41,6 +47,10 @@ in:
   business_unit_id: business-unit-id**
   created_after: 2020-12-01
   created_before: 2020-12-02
+  prospect_ids:
+    - 1234
+  sort_key: created_at
+  sort_order: descending
 ```
 
 ### With pardot user-key (will be deprecated in spring 2021)
