@@ -1,6 +1,5 @@
 package org.embulk.input.pardot;
 
-import com.darksci.pardot.api.PardotClient;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.InputPlugin;
@@ -9,7 +8,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class TestPardotInputPlugin
