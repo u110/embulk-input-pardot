@@ -3,20 +3,13 @@ package org.embulk.input.pardot;
 import com.darksci.pardot.api.PardotClient;
 import com.darksci.pardot.api.config.Configuration;
 import com.darksci.pardot.api.request.DateParameter;
-import com.darksci.pardot.api.request.email.EmailStatsRequest;
-import com.darksci.pardot.api.request.login.LoginRequest;
 import com.darksci.pardot.api.request.visitoractivity.VisitorActivityQueryRequest;
-import com.darksci.pardot.api.request.visitoractivity.VisitorActivityReadRequest;
-import com.darksci.pardot.api.response.email.EmailStatsResponse;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivityQueryResponse;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
+import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Column;
@@ -25,8 +18,6 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
-import org.embulk.spi.SchemaConfig;
-import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.type.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +28,7 @@ import java.util.List;
 public class PardotInputPlugin
         implements InputPlugin
 {
-    private final Logger logger = LoggerFactory.getLogger(PardotInputPlugin.class);
+    private static final Logger logger = LoggerFactory.getLogger(PardotInputPlugin.class);
 
     @Override
     public ConfigDiff transaction(ConfigSource config,
@@ -122,63 +113,70 @@ public class PardotInputPlugin
                           PageOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        try {
-            final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output);
-            final PardotClient pardotClient = getClient(task);
+        final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output);
+        final PardotClient pardotClient = getClient(task);
 
-            VisitorActivityQueryRequest req = new VisitorActivityQueryRequest();
-            if (task.getFetchRowLimit().isPresent()) {
-                req = req.withLimit(task.getFetchRowLimit().get());
-            }
-            if (task.getCreatedBefore().isPresent()) {
-                req = req.withCreatedBefore(new DateParameter(task.getCreatedBefore().get()));
-            }
-            if (task.getCreatedAfter().isPresent()) {
-                req = req.withCreatedAfter(new DateParameter(task.getCreatedAfter().get()));
-            }
-            if (task.getActivityTypeIds().isPresent()) {
-                req = req.withActivityTypeIds(task.getActivityTypeIds().get());
-            }
-            if (task.getProspectIds().isPresent()) {
-                req = req.withProspectIds(task.getProspectIds().get());
-            }
-            if (task.getSortKey().isPresent()) {
-                req = req.withSortBy(task.getSortKey().get());
-            }
-            if (task.getSortOrder().isPresent()) {
-                req = req.withSortOrder(task.getSortOrder().get());
-            }
+        VisitorActivityQueryRequest req = getVisitorActivityQueryRequest(task);
 
-            Integer totalResults;
-            VisitorActivityQueryResponse.Result res;
-            Integer rowIndex = 0;
-            do {
-                req = req.withOffset(rowIndex);
-                // exec request
-                res = pardotClient.visitorActivityQuery(req);
-                if (res.getVisitorActivities() != null) {
-                    rowIndex += res.getVisitorActivities().size();
-                }
-                totalResults = res.getTotalResults();
-                logger.warn("total results: {}", totalResults);
-                for (VisitorActivity va : res.getVisitorActivities()) {
-                    schema.visitColumns(new ColVisitor(new Accessor(task, va), pageBuilder, task));
-                    pageBuilder.addRecord();
-                }
-                pageBuilder.flush();
-                logger.warn("fetched rows: {} total: {}", rowIndex, totalResults);
+        Integer totalResults;
+        VisitorActivityQueryResponse.Result res;
+        Integer rowIndex = 0;
+        do {
+            req = req.withOffset(rowIndex);
+            // exec request
+            res = pardotClient.visitorActivityQuery(req);
+            if (res.getVisitorActivities() != null) {
+                rowIndex += res.getVisitorActivities().size();
             }
-            while(rowIndex < totalResults);
-
-            pageBuilder.finish();
+            totalResults = res.getTotalResults();
+            logger.info("total results: {}", totalResults);
+            for (VisitorActivity va : res.getVisitorActivities()) {
+                schema.visitColumns(new ColVisitor(new Accessor(task, va), pageBuilder, task));
+                pageBuilder.addRecord();
+            }
+            pageBuilder.flush();
+            logger.info("fetched rows: {} total: {}", rowIndex, totalResults);
         }
-        catch (Exception e) {
-            logger.error(e.toString());
-        }
+        while(rowIndex < totalResults);
+
+        pageBuilder.finish();
         return Exec.newTaskReport();
     }
 
-    private PardotClient getClient(PluginTask task) throws Exception
+    private VisitorActivityQueryRequest getVisitorActivityQueryRequest(PluginTask task)
+    {
+        VisitorActivityQueryRequest req = new VisitorActivityQueryRequest();
+        if (task.getFetchRowLimit().isPresent()) {
+            req = req.withLimit(task.getFetchRowLimit().get());
+        }
+        if (task.getCreatedBefore().isPresent()) {
+            req = req.withCreatedBefore(new DateParameter(task.getCreatedBefore().get()));
+        }
+        if (task.getCreatedAfter().isPresent()) {
+            req = req.withCreatedAfter(new DateParameter(task.getCreatedAfter().get()));
+        }
+        if (task.getActivityTypeIds().isPresent()) {
+            req = req.withActivityTypeIds(task.getActivityTypeIds().get());
+        }
+        if (task.getProspectIds().isPresent()) {
+            req = req.withProspectIds(task.getProspectIds().get());
+        }
+        if (task.getSortKey().isPresent()) {
+            req = req.withSortBy(task.getSortKey().get());
+        }
+        if (task.getSortOrder().isPresent()) {
+            req = req.withSortOrder(task.getSortOrder().get());
+        }
+        return req;
+    }
+
+    @Override
+    public ConfigDiff guess(ConfigSource config)
+    {
+        return Exec.newConfigDiff();
+    }
+
+    public static PardotClient getClient(PluginTask task)
     {
         final ConfigurationBuilder configBuilder;
         if (task.getUserKey().isPresent()) {
@@ -189,85 +187,22 @@ public class PardotInputPlugin
                             task.getPassword(),
                             task.getUserKey().get()
                     );
+            return new PardotClient(configBuilder);
         }
-        else {
-            logger.warn("use client_id / client_secret");
-            if (task.getAppClientId().isPresent()
-                    && task.getAppClientSecret().isPresent()
-                    && task.getBusinessUnitId().isPresent()) {
-                configBuilder = Configuration.newBuilder()
-                        .withSsoLogin(
-                                task.getUserName(),
-                                task.getPassword(),
-                                task.getAppClientId().get(),
-                                task.getAppClientSecret().get(),
-                                task.getBusinessUnitId().get()
-                        );
-            }
-            else {
-                throw new Exception("please set app_client_id, app_client_secret, business_unit_id");
-            }
+        logger.info("use client_id / client_secret");
+        if (task.getAppClientId().isPresent()
+                && task.getAppClientSecret().isPresent()
+                && task.getBusinessUnitId().isPresent()) {
+            configBuilder = Configuration.newBuilder()
+                    .withSsoLogin(
+                            task.getUserName(),
+                            task.getPassword(),
+                            task.getAppClientId().get(),
+                            task.getAppClientSecret().get(),
+                            task.getBusinessUnitId().get()
+                    );
+            return new PardotClient(configBuilder);
         }
-        return new PardotClient(configBuilder);
-    }
-
-    @Override
-    public ConfigDiff guess(ConfigSource config)
-    {
-        return Exec.newConfigDiff();
-    }
-
-    public interface PluginTask
-            extends Task
-    {
-        @Config("user_name")
-        String getUserName();
-
-        @Config("password")
-        String getPassword();
-
-        @Config("user_key")
-        @ConfigDefault("null")
-        Optional<String> getUserKey();
-
-        @Config("app_client_id")
-        @ConfigDefault("null")
-        Optional<String> getAppClientId();
-
-        @Config("app_client_secret")
-        @ConfigDefault("null")
-        Optional<String> getAppClientSecret();
-
-        @Config("business_unit_id")
-        @ConfigDefault("null")
-        Optional<String> getBusinessUnitId();
-
-        @Config("created_before")
-        @ConfigDefault("null")
-        Optional<String> getCreatedBefore();
-
-        @Config("created_after")
-        @ConfigDefault("null")
-        Optional<String> getCreatedAfter();
-
-        @Config("fetch_row_limit")
-        @ConfigDefault("200")
-        Optional<Integer> getFetchRowLimit();
-
-        @Config("activity_type_ids")
-        @ConfigDefault("null")
-        Optional<List<Integer>> getActivityTypeIds();
-
-        @Config("prospect_ids")
-        @ConfigDefault("null")
-        Optional<List<Long>> getProspectIds();
-
-        @Config("sort_key")
-        @ConfigDefault("null")
-        Optional<String> getSortKey();
-
-        @Config("sort_order")
-        @ConfigDefault("null")
-        Optional<String> getSortOrder();
+        throw new ConfigException("please set app_client_id, app_client_secret, business_unit_id");
     }
 }

@@ -8,10 +8,10 @@ import org.embulk.spi.time.TimestampParser;
 public class ColVisitor implements ColumnVisitor
 {
     private final Accessor accessor;
-    private final PardotInputPlugin.PluginTask task;
+    private final PluginTask task;
     private final PageBuilder pageBuilder;
 
-    public ColVisitor(Accessor accessor, PageBuilder pageBuilder, PardotInputPlugin.PluginTask task)
+    public ColVisitor(Accessor accessor, PageBuilder pageBuilder, PluginTask task)
     {
         this.accessor = accessor;
         this.pageBuilder = pageBuilder;

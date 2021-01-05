@@ -16,12 +16,12 @@ import java.util.Locale;
 
 public class Accessor
 {
-    private final PardotInputPlugin.PluginTask task;
+    private final PluginTask task;
     private final VisitorActivity va;
 
     private final Logger logger = LoggerFactory.getLogger(Accessor.class);
 
-    public Accessor(PardotInputPlugin.PluginTask task, VisitorActivity va)
+    public Accessor(PluginTask task, VisitorActivity va)
     {
         this.task = task;
         this.va = va;
