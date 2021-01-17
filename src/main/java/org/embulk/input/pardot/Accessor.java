@@ -1,18 +1,11 @@
 package org.embulk.input.pardot;
 
-import com.darksci.pardot.api.request.visitoractivity.VisitorActivityQueryRequest;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
-import com.darksci.pardot.api.response.visitoractivity.VisitorActivityQueryResponse;
 import com.google.common.base.CaseFormat;
-import org.embulk.spi.Column;
-import org.embulk.spi.time.TimestampParser;
-import org.embulk.spi.type.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Locale;
 
 public class Accessor
 {
