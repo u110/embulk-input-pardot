@@ -1,5 +1,6 @@
 package org.embulk.input.pardot;
 
+import com.darksci.pardot.api.ConfigurationBuilder;
 import com.darksci.pardot.api.PardotClient;
 import com.darksci.pardot.api.config.Configuration;
 import com.darksci.pardot.api.request.DateParameter;
@@ -21,7 +22,6 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.type.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.darksci.pardot.api.ConfigurationBuilder;
 
 import java.util.List;
 
