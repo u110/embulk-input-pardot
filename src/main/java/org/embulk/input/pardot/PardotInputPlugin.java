@@ -179,17 +179,6 @@ public class PardotInputPlugin
     public static PardotClient getClient(PluginTask task)
     {
         final ConfigurationBuilder configBuilder;
-        if (task.getUserKey().isPresent()) {
-            logger.warn("user_key will deprecate in spring 2021 see https://help.salesforce.com/articleView?id=000353746&type=1&mode=1&language=en_US&utm_source=techcomms&utm_medium=email&utm_campaign=eol");
-            configBuilder = Configuration.newBuilder()
-                    .withUsernameAndPasswordLogin(
-                            task.getUserName(),
-                            task.getPassword(),
-                            task.getUserKey().get()
-                    );
-            return new PardotClient(configBuilder);
-        }
-        logger.info("use client_id / client_secret");
         if (task.getAppClientId().isPresent()
                 && task.getAppClientSecret().isPresent()
                 && task.getBusinessUnitId().isPresent()) {

@@ -24,7 +24,7 @@ public class TestPardotInputPlugin
             .build();
 
     @Test
-    public void test__getClient__user_key()
+    public void test__getClient()
     {
         ConfigSource config = loadYamlResource(embulk, "config_test_empty_client_secret.yml");
         PluginTask task = config.loadConfig(PluginTask.class);

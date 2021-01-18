@@ -15,10 +15,6 @@ public interface PluginTask extends Task
     @Config("password")
     String getPassword();
 
-    @Config("user_key")
-    @ConfigDefault("null")
-    Optional<String> getUserKey();
-
     @Config("app_client_id")
     @ConfigDefault("null")
     Optional<String> getAppClientId();
