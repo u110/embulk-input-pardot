@@ -75,7 +75,7 @@ public class PardotInputPlugin
             }
             totalResults = reporter.getTotalResults();
             logger.info("total results: {}", totalResults);
-            for(AccessorInterface accessor : reporter.accessors()){
+            for (AccessorInterface accessor : reporter.accessors()) {
                 schema.visitColumns(new ColVisitor(accessor, pageBuilder, task));
                 pageBuilder.addRecord();
             }

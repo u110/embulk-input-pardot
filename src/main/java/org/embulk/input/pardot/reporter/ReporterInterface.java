@@ -5,7 +5,8 @@ import com.google.common.collect.ImmutableList;
 import org.embulk.input.pardot.accessor.AccessorInterface;
 import org.embulk.spi.Column;
 
-public interface ReporterInterface {
+public interface ReporterInterface
+{
 
     ImmutableList.Builder<Column> createColumnBuilder();
 

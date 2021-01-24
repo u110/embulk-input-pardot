@@ -15,7 +15,8 @@ import org.embulk.spi.type.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VisitorActivityReporter implements ReporterInterface {
+public class VisitorActivityReporter implements ReporterInterface
+{
     private final PluginTask task;
     private final VisitorActivityQueryRequest queryRequest;
     private VisitorActivityQueryResponse.Result results;
@@ -80,40 +81,46 @@ public class VisitorActivityReporter implements ReporterInterface {
     }
 
     @Override
-    public void withOffset(Integer offset) {
+    public void withOffset(Integer offset)
+    {
         this.queryRequest.withOffset(offset);
     }
 
     @Override
-    public boolean hasResults() {
+    public boolean hasResults()
+    {
         return this.results != null;
     }
 
     @Override
-    public void executeQuery(PardotClient client) {
+    public void executeQuery(PardotClient client)
+    {
         this.results = client.visitorActivityQuery(queryRequest);
     }
 
     @Override
-    public Integer queryResultSize() {
-        if(this.results == null) {
+    public Integer queryResultSize()
+    {
+        if (this.results == null) {
             return 0;
         }
         return this.results.getVisitorActivities().size();
     }
 
     @Override
-    public Integer getTotalResults() {
-        if(this.results == null) {
+    public Integer getTotalResults()
+    {
+        if (this.results == null) {
             return 0;
         }
         return this.results.getTotalResults();
     }
 
     @Override
-    public Iterable<? extends AccessorInterface> accessors() {
+    public Iterable<? extends AccessorInterface> accessors()
+    {
         List<VisitorActivityAccessor> res = new ArrayList<VisitorActivityAccessor>();
-        for(VisitorActivity va: this.results.getVisitorActivities()) {
+        for (VisitorActivity va : this.results.getVisitorActivities()) {
             res.add(new VisitorActivityAccessor(task, va));
         }
         Iterable<VisitorActivityAccessor> itrable = res;
