@@ -5,10 +5,12 @@ import com.darksci.pardot.api.request.DateParameter;
 import com.darksci.pardot.api.request.visitoractivity.VisitorActivityQueryRequest;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivityQueryResponse;
+
 import com.google.common.collect.ImmutableList;
-import org.embulk.input.pardot.accessor.VisitorActivityAccessor;
-import org.embulk.input.pardot.accessor.AccessorInterface;
+
 import org.embulk.input.pardot.PluginTask;
+import org.embulk.input.pardot.accessor.AccessorInterface;
+import org.embulk.input.pardot.accessor.VisitorActivityAccessor;
 import org.embulk.spi.Column;
 import org.embulk.spi.type.Types;
 

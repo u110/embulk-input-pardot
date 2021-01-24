@@ -1,10 +1,8 @@
 package org.embulk.input.pardot;
 
-import com.google.common.collect.ImmutableList;
 import org.embulk.config.ConfigException;
 import org.embulk.input.pardot.reporter.ReporterInterface;
 import org.embulk.input.pardot.reporter.VisitorActivityReporter;
-import org.embulk.spi.Column;
 
 class ReporterBuilder
 {

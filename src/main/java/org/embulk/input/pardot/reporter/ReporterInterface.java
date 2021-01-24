@@ -7,7 +7,6 @@ import org.embulk.spi.Column;
 
 public interface ReporterInterface
 {
-
     ImmutableList.Builder<Column> createColumnBuilder();
 
     void withOffset(Integer rowIndex);
