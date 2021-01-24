@@ -1,0 +1,9 @@
+type: pardot
+object_type: fake_object_type
+user_name: dummy@example.com
+password: dummy-password
+app_client_id: app-client-id**
+app_client_secret: app-client-secret**
+business_unit_id: business-unit-id**
+created_after: 2020-12-01
+created_before: 2020-12-02

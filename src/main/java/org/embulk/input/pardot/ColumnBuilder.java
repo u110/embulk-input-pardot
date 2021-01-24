@@ -8,15 +8,14 @@ import org.embulk.spi.Column;
 class ColumnBuilder
 {
     private static final String OBJECT_TYPE_VISITOR_ACTIVITY = "visitor_activity";
-
     private ColumnBuilder()
     {
     }
     public static ImmutableList.Builder<Column> create(PluginTask task)
     {
-        if (task.getObjectType() == OBJECT_TYPE_VISITOR_ACTIVITY) {
+        if (task.getObjectType().equals(OBJECT_TYPE_VISITOR_ACTIVITY)) {
             return VisitorActivityReporter.createColumnBuilder();
         }
-        throw new ConfigException("undefined object: " + task.getObjectType());
+        throw new ConfigException("undefined object_type: " + task.getObjectType());
     }
 }
