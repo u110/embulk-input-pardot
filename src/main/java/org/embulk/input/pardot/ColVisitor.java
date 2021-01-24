@@ -1,5 +1,6 @@
 package org.embulk.input.pardot;
 
+import org.embulk.input.pardot.accessor.AccessorInterface;
 import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageBuilder;
@@ -7,11 +8,11 @@ import org.embulk.spi.time.TimestampParser;
 
 public class ColVisitor implements ColumnVisitor
 {
-    private final Accessor accessor;
+    private final AccessorInterface accessor;
     private final PluginTask task;
     private final PageBuilder pageBuilder;
 
-    public ColVisitor(Accessor accessor, PageBuilder pageBuilder, PluginTask task)
+    public ColVisitor(AccessorInterface accessor, PageBuilder pageBuilder, PluginTask task)
     {
         this.accessor = accessor;
         this.pageBuilder = pageBuilder;

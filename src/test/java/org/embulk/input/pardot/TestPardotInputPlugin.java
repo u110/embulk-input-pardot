@@ -44,7 +44,7 @@ public class TestPardotInputPlugin
         ConfigSource config = loadYamlResource(embulk, "config_undefined_object_type.yml");
         PluginTask task = config.loadConfig(PluginTask.class);
         try {
-            ColumnBuilder.create(task);
+            ReporterBuilder.create(task);
         }
         catch (ConfigException e) {
             assertEquals("undefined object_type: fake_object_type", e.getMessage());

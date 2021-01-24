@@ -1,15 +1,32 @@
 package org.embulk.input.pardot.reporter;
 
+import com.darksci.pardot.api.PardotClient;
+import com.darksci.pardot.api.request.DateParameter;
+import com.darksci.pardot.api.request.visitoractivity.VisitorActivityQueryRequest;
+import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
+import com.darksci.pardot.api.response.visitoractivity.VisitorActivityQueryResponse;
 import com.google.common.collect.ImmutableList;
+import org.embulk.input.pardot.accessor.VisitorActivityAccessor;
+import org.embulk.input.pardot.accessor.AccessorInterface;
+import org.embulk.input.pardot.PluginTask;
 import org.embulk.spi.Column;
 import org.embulk.spi.type.Types;
 
-public class VisitorActivityReporter
-{
-    private VisitorActivityReporter()
-    {}
+import java.util.ArrayList;
+import java.util.List;
 
-    public static ImmutableList.Builder<Column> createColumnBuilder()
+public class VisitorActivityReporter implements ReporterInterface {
+    private final PluginTask task;
+    private final VisitorActivityQueryRequest queryRequest;
+    private VisitorActivityQueryResponse.Result results;
+
+    public VisitorActivityReporter(PluginTask task)
+    {
+        this.task = task;
+        this.queryRequest = buildQueryRequest();
+    }
+
+    public ImmutableList.Builder<Column> createColumnBuilder()
     {
         ImmutableList.Builder<Column> columns = ImmutableList.builder();
         int i = 0;
@@ -60,5 +77,73 @@ public class VisitorActivityReporter
         //<updated_at> timestamp
         //columns.add(new Column(i++, "timestamp", Types.TIMESTAMP)); // INFO not found on api client
         return columns;
+    }
+
+    @Override
+    public void withOffset(Integer offset) {
+        this.queryRequest.withOffset(offset);
+    }
+
+    @Override
+    public boolean hasResults() {
+        return this.results != null;
+    }
+
+    @Override
+    public void executeQuery(PardotClient client) {
+        this.results = client.visitorActivityQuery(queryRequest);
+    }
+
+    @Override
+    public Integer queryResultSize() {
+        if(this.results == null) {
+            return 0;
+        }
+        return this.results.getVisitorActivities().size();
+    }
+
+    @Override
+    public Integer getTotalResults() {
+        if(this.results == null) {
+            return 0;
+        }
+        return this.results.getTotalResults();
+    }
+
+    @Override
+    public Iterable<? extends AccessorInterface> accessors() {
+        List<VisitorActivityAccessor> res = new ArrayList<VisitorActivityAccessor>();
+        for(VisitorActivity va: this.results.getVisitorActivities()) {
+            res.add(new VisitorActivityAccessor(task, va));
+        }
+        Iterable<VisitorActivityAccessor> itrable = res;
+        return itrable;
+    }
+
+    private VisitorActivityQueryRequest buildQueryRequest()
+    {
+        VisitorActivityQueryRequest req = new VisitorActivityQueryRequest();
+        if (task.getFetchRowLimit().isPresent()) {
+            req = req.withLimit(task.getFetchRowLimit().get());
+        }
+        if (task.getCreatedBefore().isPresent()) {
+            req = req.withCreatedBefore(new DateParameter(task.getCreatedBefore().get()));
+        }
+        if (task.getCreatedAfter().isPresent()) {
+            req = req.withCreatedAfter(new DateParameter(task.getCreatedAfter().get()));
+        }
+        if (task.getActivityTypeIds().isPresent()) {
+            req = req.withActivityTypeIds(task.getActivityTypeIds().get());
+        }
+        if (task.getProspectIds().isPresent()) {
+            req = req.withProspectIds(task.getProspectIds().get());
+        }
+        if (task.getSortKey().isPresent()) {
+            req = req.withSortBy(task.getSortKey().get());
+        }
+        if (task.getSortOrder().isPresent()) {
+            req = req.withSortOrder(task.getSortOrder().get());
+        }
+        return req;
     }
 }
