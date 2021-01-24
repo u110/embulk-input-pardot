@@ -1,25 +1,27 @@
-package org.embulk.input.pardot;
+package org.embulk.input.pardot.accessor;
 
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
 import com.google.common.base.CaseFormat;
+import org.embulk.input.pardot.PluginTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 
-public class Accessor
+public class VisitorActivityAccessor implements AccessorInterface
 {
     private final PluginTask task;
     private final VisitorActivity va;
 
-    private final Logger logger = LoggerFactory.getLogger(Accessor.class);
+    private final Logger logger = LoggerFactory.getLogger(VisitorActivityAccessor.class);
 
-    public Accessor(PluginTask task, VisitorActivity va)
+    public VisitorActivityAccessor(PluginTask task, VisitorActivity va)
     {
         this.task = task;
         this.va = va;
     }
 
+    @Override
     public String get(String name)
     {
         String methodName = "";

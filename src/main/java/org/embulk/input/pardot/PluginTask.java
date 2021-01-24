@@ -9,6 +9,10 @@ import java.util.List;
 
 public interface PluginTask extends Task
 {
+    @Config("object_type")
+    @ConfigDefault("\"visitor_activity\"")
+    String getObjectType();
+
     @Config("user_name")
     String getUserName();
 

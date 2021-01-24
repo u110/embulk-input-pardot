@@ -35,6 +35,21 @@ public class TestPardotInputPlugin
             assertEquals("please set app_client_id, app_client_secret, business_unit_id", e.getMessage());
             return;
         }
-        assertTrue(false);
+        assertTrue("Exception must be occurred", false);
+    }
+
+    @Test
+    public void test__ColumnBuilder()
+    {
+        ConfigSource config = loadYamlResource(embulk, "config_undefined_object_type.yml");
+        PluginTask task = config.loadConfig(PluginTask.class);
+        try {
+            ReporterBuilder.create(task);
+        }
+        catch (ConfigException e) {
+            assertEquals("undefined object_type: fake_object_type", e.getMessage());
+            return;
+        }
+        assertTrue("Exception must be occurred", false);
     }
 }
