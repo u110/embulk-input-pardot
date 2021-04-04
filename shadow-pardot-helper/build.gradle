@@ -10,7 +10,11 @@ apply plugin: "com.github.johnrengelman.shadow"
 
 repositories {
     mavenCentral()
+    maven{
+        url "https://maven.pkg.github.com/u110"
+    }
 }
+
 
 group = "io.trocco"
 version = "${rootProject.version}"
@@ -31,7 +35,7 @@ configurations {
 
 dependencies {
     // https://mvnrepository.com/artifact/com.darksci/pardot-api-client
-    compile group: 'com.darksci', name: 'pardot-api-client', version: '3.1.0'
+    compile group: 'com.darksci', name: 'pardot-api-client', version: '3.2.0'
 }
 
 // Relocate Guava and Jackson packages since they are incompatible from Embulk's.
