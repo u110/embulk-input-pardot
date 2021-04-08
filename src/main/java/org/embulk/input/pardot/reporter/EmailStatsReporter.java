@@ -32,6 +32,8 @@ public class EmailStatsReporter implements ReporterInterface
     {
         ImmutableList.Builder<Column> columns = ImmutableList.builder();
         int i = 0;
+        // FIXME: add all params @see https://developer.pardot.com/kb/api-version-3/emails/#supported-operations_1
+        columns.add(new Column(i++, "list_email_id", Types.LONG));
         columns.add(new Column(i++, "sent", Types.LONG));
         columns.add(new Column(i++, "delivered", Types.LONG));
         columns.add(new Column(i++, "total_clicks", Types.LONG));
@@ -83,8 +85,10 @@ public class EmailStatsReporter implements ReporterInterface
     public Iterable<? extends AccessorInterface> accessors()
     {
         List<EmailStatsAccessor> res = new ArrayList<>();
+        int i = 0;
         for (EmailStatsResponse.Stats item : this.results) {
-            res.add(new EmailStatsAccessor(task, item));
+            res.add(new EmailStatsAccessor(task, item, listEmailIds.get(i)));
+            i++;
         }
         Iterable<EmailStatsAccessor> itrable = res;
         return itrable;

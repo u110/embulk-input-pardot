@@ -15,11 +15,13 @@ public class EmailStatsAccessor implements AccessorInterface
     private final EmailStatsResponse.Stats stats;
 
     private final Logger logger = LoggerFactory.getLogger(EmailStatsAccessor.class);
+    private final Long listEmailId;
 
-    public EmailStatsAccessor(PluginTask task, EmailStatsResponse.Stats stats)
+    public EmailStatsAccessor(PluginTask task, EmailStatsResponse.Stats stats, Long listEmailId)
     {
         this.task = task;
         this.stats = stats;
+        this.listEmailId = listEmailId;
     }
 
     @Override
@@ -27,6 +29,11 @@ public class EmailStatsAccessor implements AccessorInterface
     {
         String methodName = "";
         try {
+            switch (name) {
+                case "list_email_id":
+                    return this.listEmailId.toString();
+                default:
+            }
             methodName = "get" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name);
             Class<EmailStatsResponse.Stats> clazz = (Class<EmailStatsResponse.Stats>) stats.getClass();
             Method method = clazz.getDeclaredMethod(methodName);
