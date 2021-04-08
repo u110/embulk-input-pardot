@@ -104,15 +104,13 @@ public class PardotInputPlugin
         if (task.getAppClientId().isPresent()
                 && task.getAppClientSecret().isPresent()
                 && task.getBusinessUnitId().isPresent()) {
-            configBuilder = Configuration.newBuilder()
-                    .withSsoLogin(
-                            task.getUserName(),
-                            task.getPassword(),
-                            task.getAppClientId().get(),
-                            task.getAppClientSecret().get(),
-                            task.getBusinessUnitId().get()
-                    );
-            return new PardotClient(configBuilder);
+            return Client.getClient(
+                    task.getUserName(),
+                    task.getPassword(),
+                    task.getAppClientId().get(),
+                    task.getAppClientSecret().get(),
+                    task.getBusinessUnitId().get()
+            );
         }
         throw new ConfigException("please set app_client_id, app_client_secret, business_unit_id");
     }

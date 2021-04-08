@@ -142,7 +142,7 @@ public class VisitorActivityReporter implements ReporterInterface
         // do nothing
     }
 
-    private VisitorActivityQueryRequest buildQueryRequest()
+    public VisitorActivityQueryRequest buildQueryRequest()
     {
         VisitorActivityQueryRequest req = new VisitorActivityQueryRequest();
         if (task.getFetchRowLimit().isPresent()) {
