@@ -130,6 +130,18 @@ public class VisitorActivityReporter implements ReporterInterface
         return itrable;
     }
 
+    @Override
+    public void beforeExecuteQueries()
+    {
+        // do nothing
+    }
+
+    @Override
+    public void afterExecuteQueries()
+    {
+        // do nothing
+    }
+
     private VisitorActivityQueryRequest buildQueryRequest()
     {
         VisitorActivityQueryRequest req = new VisitorActivityQueryRequest();

@@ -20,4 +20,7 @@ public interface ReporterInterface
     Integer getTotalResults();
 
     Iterable<? extends AccessorInterface> accessors();
+
+    void beforeExecuteQueries();
+    void afterExecuteQueries();
 }

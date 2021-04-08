@@ -70,6 +70,7 @@ public class PardotInputPlugin
 
         Integer totalResults;
         Integer rowIndex = 0;
+        reporter.beforeExecuteQueries();
         do {
             reporter.withOffset(rowIndex);
             reporter.executeQuery(pardotClient);
@@ -85,8 +86,8 @@ public class PardotInputPlugin
             pageBuilder.flush();
             logger.info("fetched rows: {} total: {}", rowIndex, totalResults);
         }
-        while(rowIndex < totalResults);
-
+        while (rowIndex < totalResults);
+        reporter.afterExecuteQueries();
         pageBuilder.finish();
         return Exec.newTaskReport();
     }
