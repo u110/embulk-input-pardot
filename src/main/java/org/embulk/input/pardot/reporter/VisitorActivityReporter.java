@@ -77,6 +77,7 @@ public class VisitorActivityReporter implements ReporterInterface
         columns.add(new Column(i++, "campaign_folder_id", Types.LONG));
         //<created_at> timestamp
         columns.add(new Column(i++, "created_at", Types.TIMESTAMP));
+        columns.add(new Column(i++, "updated_at", Types.TIMESTAMP));
         //<updated_at> timestamp
         //columns.add(new Column(i++, "timestamp", Types.TIMESTAMP)); // INFO not found on api client
         return columns;
@@ -140,6 +141,12 @@ public class VisitorActivityReporter implements ReporterInterface
         }
         if (task.getCreatedAfter().isPresent()) {
             req = req.withCreatedAfter(new DateParameter(task.getCreatedAfter().get()));
+        }
+        if (task.getUpdatedBefore().isPresent()) {
+            req = req.withUpdatedBefore(new DateParameter(task.getUpdatedBefore().get()));
+        }
+        if (task.getUpdatedAfter().isPresent()) {
+            req = req.withUpdatedAfter(new DateParameter(task.getUpdatedAfter().get()));
         }
         if (task.getActivityTypeIds().isPresent()) {
             req = req.withActivityTypeIds(task.getActivityTypeIds().get());
