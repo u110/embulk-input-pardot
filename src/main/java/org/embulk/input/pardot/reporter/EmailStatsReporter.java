@@ -6,7 +6,6 @@ import com.darksci.pardot.api.request.visitoractivity.VisitorActivityQueryReques
 import com.darksci.pardot.api.response.email.EmailStatsResponse;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivityQueryResponse;
-import com.darksci.pardot.api.response.visitoractivity.VisitorActivityType;
 import com.google.common.collect.ImmutableList;
 import org.embulk.input.pardot.Client;
 import org.embulk.input.pardot.PluginTask;
@@ -14,12 +13,13 @@ import org.embulk.input.pardot.accessor.AccessorInterface;
 import org.embulk.input.pardot.accessor.EmailStatsAccessor;
 import org.embulk.spi.Column;
 import org.embulk.spi.type.Types;
-import org.jcodings.util.Hash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
 public class EmailStatsReporter implements ReporterInterface
 {
