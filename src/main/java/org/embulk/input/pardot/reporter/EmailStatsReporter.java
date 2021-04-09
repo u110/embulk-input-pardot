@@ -7,6 +7,7 @@ import com.darksci.pardot.api.response.email.EmailStatsResponse;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivityQueryResponse;
 import com.google.common.collect.ImmutableList;
+import org.embulk.config.ConfigException;
 import org.embulk.input.pardot.Client;
 import org.embulk.input.pardot.PluginTask;
 import org.embulk.input.pardot.accessor.AccessorInterface;
@@ -120,6 +121,12 @@ public class EmailStatsReporter implements ReporterInterface
     @Override
     public void beforeExecuteQueries()
     {
+        if (task.getFetchRowLimit().isPresent()) {
+            throw new ConfigException("cannot set fetch_row_limit with using object: `email_stats`");
+        }
+        if (task.getActivityTypeIds().isPresent()) {
+            throw new ConfigException("cannot set activity_ids with using object: `email_stats`");
+        }
         // visitor activities からlist_email_idを取得する
         VisitorActivityReporter r = new VisitorActivityReporter(task);
         VisitorActivityQueryRequest req = r.buildQueryRequest();
