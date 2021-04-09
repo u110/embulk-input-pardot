@@ -22,7 +22,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Test with Gradle
-        run: ./gradlew test
+        run: USERNAME=u110 TOKEN=${{ github.token }} ./gradlew test --info
       - name: Publish Gem
         run: |
           mkdir -p $HOME/.gem

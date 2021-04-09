@@ -35,6 +35,14 @@ public interface PluginTask extends Task
     @ConfigDefault("null")
     Optional<String> getCreatedBefore();
 
+    @Config("updated_after")
+    @ConfigDefault("null")
+    Optional<String> getUpdatedAfter();
+
+    @Config("updated_before")
+    @ConfigDefault("null")
+    Optional<String> getUpdatedBefore();
+
     @Config("created_after")
     @ConfigDefault("null")
     Optional<String> getCreatedAfter();

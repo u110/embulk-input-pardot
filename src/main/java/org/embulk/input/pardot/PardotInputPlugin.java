@@ -2,7 +2,6 @@ package org.embulk.input.pardot;
 
 import com.darksci.pardot.api.ConfigurationBuilder;
 import com.darksci.pardot.api.PardotClient;
-import com.darksci.pardot.api.config.Configuration;
 import com.google.common.collect.ImmutableList;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
@@ -70,6 +69,7 @@ public class PardotInputPlugin
 
         Integer totalResults;
         Integer rowIndex = 0;
+        reporter.beforeExecuteQueries();
         do {
             reporter.withOffset(rowIndex);
             reporter.executeQuery(pardotClient);
@@ -85,8 +85,8 @@ public class PardotInputPlugin
             pageBuilder.flush();
             logger.info("fetched rows: {} total: {}", rowIndex, totalResults);
         }
-        while(rowIndex < totalResults);
-
+        while (rowIndex < totalResults);
+        reporter.afterExecuteQueries();
         pageBuilder.finish();
         return Exec.newTaskReport();
     }
@@ -103,15 +103,13 @@ public class PardotInputPlugin
         if (task.getAppClientId().isPresent()
                 && task.getAppClientSecret().isPresent()
                 && task.getBusinessUnitId().isPresent()) {
-            configBuilder = Configuration.newBuilder()
-                    .withSsoLogin(
-                            task.getUserName(),
-                            task.getPassword(),
-                            task.getAppClientId().get(),
-                            task.getAppClientSecret().get(),
-                            task.getBusinessUnitId().get()
-                    );
-            return new PardotClient(configBuilder);
+            return Client.getClient(
+                    task.getUserName(),
+                    task.getPassword(),
+                    task.getAppClientId().get(),
+                    task.getAppClientSecret().get(),
+                    task.getBusinessUnitId().get()
+            );
         }
         throw new ConfigException("please set app_client_id, app_client_secret, business_unit_id");
     }

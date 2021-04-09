@@ -23,6 +23,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: check with Gradle
-        run: ./gradlew checkstyle --info
+        run: USERNAME=u110 TOKEN=${{ github.token }} ./gradlew checkstyle --info
       - name: test with Gradle
-        run: ./gradlew test --info
+        run: USERNAME=u110 TOKEN=${{ github.token }} ./gradlew test --info
