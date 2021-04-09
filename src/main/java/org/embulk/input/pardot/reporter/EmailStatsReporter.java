@@ -6,6 +6,7 @@ import com.darksci.pardot.api.request.visitoractivity.VisitorActivityQueryReques
 import com.darksci.pardot.api.response.email.EmailStatsResponse;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivityQueryResponse;
+import com.darksci.pardot.api.response.visitoractivity.VisitorActivityType;
 import com.google.common.collect.ImmutableList;
 import org.embulk.input.pardot.Client;
 import org.embulk.input.pardot.PluginTask;
@@ -13,14 +14,19 @@ import org.embulk.input.pardot.accessor.AccessorInterface;
 import org.embulk.input.pardot.accessor.EmailStatsAccessor;
 import org.embulk.spi.Column;
 import org.embulk.spi.type.Types;
+import org.jcodings.util.Hash;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class EmailStatsReporter implements ReporterInterface
 {
+    private final Logger logger = LoggerFactory.getLogger(EmailStatsReporter.class);
     private final PluginTask task;
-    private List<Long> listEmailIds = new ArrayList<>();
-    private List<EmailStatsResponse.Stats> results = new ArrayList<>();
+    private HashMap<Long, VisitorActivity> listEmails = new HashMap<>();
+    private HashMap<Long, EmailStatsResponse.Stats> results = new HashMap<>();
     private Integer offset;
 
     public EmailStatsReporter(PluginTask task)
@@ -37,6 +43,25 @@ public class EmailStatsReporter implements ReporterInterface
         columns.add(new Column(i++, "sent", Types.LONG));
         columns.add(new Column(i++, "delivered", Types.LONG));
         columns.add(new Column(i++, "total_clicks", Types.LONG));
+        columns.add(new Column(i++, "unique_clicks", Types.LONG));
+        columns.add(new Column(i++, "soft_bounced", Types.LONG));
+        columns.add(new Column(i++, "hard_bounced", Types.LONG));
+        columns.add(new Column(i++, "opt_outs", Types.LONG));
+        columns.add(new Column(i++, "spam_complaints", Types.LONG));
+        columns.add(new Column(i++, "opens", Types.LONG));
+        columns.add(new Column(i++, "unique_opens", Types.LONG));
+        columns.add(new Column(i++, "delivery_rate", Types.STRING));
+        columns.add(new Column(i++, "opens_rate", Types.STRING));
+        columns.add(new Column(i++, "click_through_rate", Types.STRING));
+        columns.add(new Column(i++, "unique_click_through_rate", Types.STRING));
+        columns.add(new Column(i++, "click_open_ratio", Types.STRING));
+        columns.add(new Column(i++, "opt_out_rate", Types.STRING));
+        columns.add(new Column(i++, "spam_complaint_rate", Types.STRING));
+        columns.add(new Column(i++, "campaign_id", Types.LONG));
+        columns.add(new Column(i++, "campaign_cost", Types.LONG));
+        columns.add(new Column(i++, "campaign_folder_id", Types.LONG));
+        columns.add(new Column(i++, "campaign_name", Types.STRING));
+        columns.add(new Column(i++, "title", Types.STRING));
         return columns;
     }
 
@@ -55,14 +80,12 @@ public class EmailStatsReporter implements ReporterInterface
     @Override
     public void executeQuery(PardotClient client)
     {
-        int i = offset;
-        while (i < listEmailIds.size()) {
-            EmailStatsRequest queryRequest = new EmailStatsRequest().selectByListEmailId(listEmailIds.get(i));
+        for (Long listEmailId : listEmails.keySet()) {
+            EmailStatsRequest queryRequest = new EmailStatsRequest().selectByListEmailId(listEmailId);
             Optional<EmailStatsResponse.Stats> stats = client.emailStats(queryRequest);
             if (stats.isPresent()) {
-                results.add(stats.get());
+                results.put(listEmailId, stats.get());
             }
-            i++;
         }
     }
 
@@ -75,10 +98,10 @@ public class EmailStatsReporter implements ReporterInterface
     @Override
     public Integer getTotalResults()
     {
-        if (this.listEmailIds == null) {
+        if (this.listEmails == null) {
             return 0;
         }
-        return this.listEmailIds.size();
+        return this.listEmails.size();
     }
 
     @Override
@@ -86,8 +109,8 @@ public class EmailStatsReporter implements ReporterInterface
     {
         List<EmailStatsAccessor> res = new ArrayList<>();
         int i = 0;
-        for (EmailStatsResponse.Stats item : this.results) {
-            res.add(new EmailStatsAccessor(task, item, listEmailIds.get(i)));
+        for (Long listEmailId : this.results.keySet()) {
+            res.add(new EmailStatsAccessor(task, this.results.get(listEmailId), this.listEmails.get(listEmailId)));
             i++;
         }
         Iterable<EmailStatsAccessor> itrable = res;
@@ -97,19 +120,27 @@ public class EmailStatsReporter implements ReporterInterface
     @Override
     public void beforeExecuteQueries()
     {
-        // FIXME: list_email_id のリストを作成する
-
         // visitor activities からlist_email_idを取得する
         VisitorActivityReporter r = new VisitorActivityReporter(task);
         VisitorActivityQueryRequest req = r.buildQueryRequest();
-        VisitorActivityQueryResponse.Result res = Client.getClient(task).visitorActivityQuery(req);
-
-        Iterator<VisitorActivity> iterator = res.getVisitorActivities().iterator();
-        while (iterator.hasNext()) {
-            VisitorActivity va = iterator.next();
-            this.listEmailIds.add(va.getListEmailId());
+        req.withEmailActivitiesOnly();
+        int offset = 0;
+        int totalResults = 0;
+        do {
+            req.withOffset(offset);
+            VisitorActivityQueryResponse.Result res = Client.getClient(task).visitorActivityQuery(req);
+            offset += res.getVisitorActivities().size();
+            logger.debug("offset: " + offset);
+            logger.debug("visitor activities size: " + res.getVisitorActivities().size());
+            logger.debug("visitor activities total results: " + res.getTotalResults());
+            totalResults = res.getTotalResults();
+            for (VisitorActivity va : res.getVisitorActivities()) {
+                this.listEmails.put(va.getListEmailId(), va);
+            }
         }
-        this.listEmailIds = new ArrayList<Long>(new HashSet<>(this.listEmailIds));
+        while (offset < totalResults);
+
+        logger.debug("fetched list_emails size: " + listEmails.size());
     }
 
     @Override

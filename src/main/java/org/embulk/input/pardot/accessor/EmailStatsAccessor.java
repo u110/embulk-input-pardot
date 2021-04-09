@@ -15,13 +15,13 @@ public class EmailStatsAccessor implements AccessorInterface
     private final EmailStatsResponse.Stats stats;
 
     private final Logger logger = LoggerFactory.getLogger(EmailStatsAccessor.class);
-    private final Long listEmailId;
+    private final VisitorActivity listEmailActivity;
 
-    public EmailStatsAccessor(PluginTask task, EmailStatsResponse.Stats stats, Long listEmailId)
+    public EmailStatsAccessor(PluginTask task, EmailStatsResponse.Stats stats, VisitorActivity listEmail)
     {
         this.task = task;
         this.stats = stats;
-        this.listEmailId = listEmailId;
+        this.listEmailActivity = listEmail;
     }
 
     @Override
@@ -31,7 +31,29 @@ public class EmailStatsAccessor implements AccessorInterface
         try {
             switch (name) {
                 case "list_email_id":
-                    return this.listEmailId.toString();
+                    return this.listEmailActivity.getListEmailId().toString();
+                case "title":
+                    return this.listEmailActivity.getDetails().toString();
+                case "campaign_id":
+                    if (this.listEmailActivity.getCampaign() == null || this.listEmailActivity.getCampaign().getId() == null) {
+                        return null;
+                    }
+                    return this.listEmailActivity.getCampaign().getId().toString();
+                case "campaign_name":
+                    if (this.listEmailActivity.getCampaign() == null || this.listEmailActivity.getCampaign().getName() == null) {
+                        return null;
+                    }
+                    return this.listEmailActivity.getCampaign().getName();
+                case "campaign_cost":
+                    if (this.listEmailActivity.getCampaign() == null || this.listEmailActivity.getCampaign().getCost() == null) {
+                        return null;
+                    }
+                    return this.listEmailActivity.getCampaign().getCost().toString();
+                case "campaign_folder_id":
+                    if (this.listEmailActivity.getCampaign() == null || this.listEmailActivity.getCampaign().getFolderId() == null) {
+                        return null;
+                    }
+                    return this.listEmailActivity.getCampaign().getFolderId().toString();
                 default:
             }
             methodName = "get" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name);
