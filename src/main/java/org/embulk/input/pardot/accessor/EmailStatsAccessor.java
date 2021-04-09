@@ -13,9 +13,9 @@ public class EmailStatsAccessor implements AccessorInterface
 {
     private final PluginTask task;
     private final EmailStatsResponse.Stats stats;
+    private final VisitorActivity listEmailActivity;
 
     private final Logger logger = LoggerFactory.getLogger(EmailStatsAccessor.class);
-    private final VisitorActivity listEmailActivity;
 
     public EmailStatsAccessor(PluginTask task, EmailStatsResponse.Stats stats, VisitorActivity listEmail)
     {
