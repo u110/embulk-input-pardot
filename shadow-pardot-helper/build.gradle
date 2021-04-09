@@ -40,7 +40,7 @@ configurations {
 
 dependencies {
     // [orignal] https://mvnrepository.com/artifact/com.darksci/pardot-api-client
-    implementation group: 'com.darksci', name: 'pardot-api-client', version: '3.2.0-0.0.6'
+    implementation group: 'com.darksci', name: 'pardot-api-client', version: '3.2.0-0.0.8'
 }
 
 // Relocate Guava and Jackson packages since they are incompatible from Embulk's.

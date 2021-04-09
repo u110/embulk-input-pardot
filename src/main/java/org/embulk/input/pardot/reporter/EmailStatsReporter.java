@@ -38,7 +38,7 @@ public class EmailStatsReporter implements ReporterInterface
     {
         ImmutableList.Builder<Column> columns = ImmutableList.builder();
         int i = 0;
-        // FIXME: add all params @see https://developer.pardot.com/kb/api-version-3/emails/#supported-operations_1
+        // @see https://developer.pardot.com/kb/api-version-3/emails/#supported-operations_1
         columns.add(new Column(i++, "list_email_id", Types.LONG));
         columns.add(new Column(i++, "sent", Types.LONG));
         columns.add(new Column(i++, "delivered", Types.LONG));
@@ -61,7 +61,7 @@ public class EmailStatsReporter implements ReporterInterface
         columns.add(new Column(i++, "campaign_cost", Types.LONG));
         columns.add(new Column(i++, "campaign_folder_id", Types.LONG));
         columns.add(new Column(i++, "campaign_name", Types.STRING));
-        columns.add(new Column(i++, "title", Types.STRING));
+        columns.add(new Column(i++, "subject", Types.STRING));
         return columns;
     }
 
