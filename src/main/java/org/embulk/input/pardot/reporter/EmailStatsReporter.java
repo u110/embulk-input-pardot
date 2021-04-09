@@ -126,9 +126,10 @@ public class EmailStatsReporter implements ReporterInterface
         req.withEmailActivitiesOnly();
         int offset = 0;
         int totalResults = 0;
+        PardotClient cli = Client.getClient(task);
         do {
             req.withOffset(offset);
-            VisitorActivityQueryResponse.Result res = Client.getClient(task).visitorActivityQuery(req);
+            VisitorActivityQueryResponse.Result res = cli.visitorActivityQuery(req);
             offset += res.getVisitorActivities().size();
             logger.debug("offset: " + offset);
             logger.debug("visitor activities size: " + res.getVisitorActivities().size());
