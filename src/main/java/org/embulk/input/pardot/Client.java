@@ -7,9 +7,7 @@ import com.darksci.pardot.api.config.Configuration;
 public class Client
 {
     private Client()
-    {
-
-    }
+    { }
     public static PardotClient getClient(String userName, String password, String appClientId, String appClientSecret, String businessUnitId)
     {
         final ConfigurationBuilder configBuilder;
