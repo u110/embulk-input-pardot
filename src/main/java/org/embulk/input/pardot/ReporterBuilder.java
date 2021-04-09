@@ -6,6 +6,7 @@ import org.embulk.input.pardot.reporter.EmailStatsReporter;
 import org.embulk.input.pardot.reporter.ProspectReporter;
 import org.embulk.input.pardot.reporter.ReporterInterface;
 import org.embulk.input.pardot.reporter.VisitorActivityReporter;
+import org.embulk.input.pardot.reporter.VisitorReporter;
 
 class ReporterBuilder
 {
@@ -13,6 +14,7 @@ class ReporterBuilder
     private static final String OBJECT_TYPE_EMAIL_STATS = "email_stats";
     private static final String OBJECT_TYPE_EMAIL = "email";
     private static final String OBJECT_TYPE_PROSPECT = "prospect";
+    private static final String OBJECT_TYPE_VISITOR = "visitor";
     private ReporterBuilder()
     {
     }
@@ -29,6 +31,9 @@ class ReporterBuilder
         }
         if (task.getObjectType().equals(OBJECT_TYPE_PROSPECT)) {
             return new ProspectReporter(task);
+        }
+        if (task.getObjectType().equals(OBJECT_TYPE_VISITOR)) {
+            return new VisitorReporter(task);
         }
         throw new ConfigException("undefined object_type: " + task.getObjectType());
     }
