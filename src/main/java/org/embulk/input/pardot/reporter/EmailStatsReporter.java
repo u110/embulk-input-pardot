@@ -121,9 +121,6 @@ public class EmailStatsReporter implements ReporterInterface
     @Override
     public void beforeExecuteQueries()
     {
-        if (task.getFetchRowLimit().isPresent()) {
-            throw new ConfigException("cannot set fetch_row_limit with using object: `email_stats`");
-        }
         if (task.getActivityTypeIds().isPresent()) {
             throw new ConfigException("cannot set activity_ids with using object: `email_stats`");
         }

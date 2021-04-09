@@ -6,6 +6,7 @@ import com.darksci.pardot.api.request.visitoractivity.VisitorActivityQueryReques
 import com.darksci.pardot.api.response.email.Email;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivity;
 import com.darksci.pardot.api.response.visitoractivity.VisitorActivityQueryResponse;
+import com.darksci.pardot.api.response.visitoractivity.VisitorActivityType;
 import com.google.common.collect.ImmutableList;
 import org.embulk.config.ConfigException;
 import org.embulk.input.pardot.Client;
@@ -103,9 +104,6 @@ public class EmailReporter implements ReporterInterface
     @Override
     public void beforeExecuteQueries()
     {
-        if (task.getFetchRowLimit().isPresent()) {
-            throw new ConfigException("cannot set fetch_row_limit with using object: `email`");
-        }
         if (task.getActivityTypeIds().isPresent()) {
             throw new ConfigException("cannot set activity_ids with using object: `email`");
         }
@@ -113,6 +111,7 @@ public class EmailReporter implements ReporterInterface
         VisitorActivityReporter r = new VisitorActivityReporter(task);
         VisitorActivityQueryRequest req = r.buildQueryRequest();
         req.withEmailActivitiesOnly();
+        req.withActivityType(VisitorActivityType.fromValue(6));
         int offset = 0;
         int totalResults = 0;
         PardotClient cli = Client.getClient(task);
