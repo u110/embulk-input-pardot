@@ -19,7 +19,7 @@ Now only 'Querying Visitor Activities' is supported.
 - **app_client_secret**: salesforce app-client-secret (string, default: `null`)
 - **business_unit_id**: salesforce business-unit-id (string, default: `null`)
 - **object_type**: salesforce Object
-  - visitor_activities(default), email_stats
+  - visitor_activity(default), email_stats
 - **created_after**: Selects visitor activities created after the specified time. If a <custom_time> is used, ensure that the specified date is formatted using GNU Date Input Syntax.
   - today, yesterday, last_7_days, this_month, last_month, <custom_time>
 - **created_before**: Selects visitor activities created before the specified time. If a <custom_time> is used, ensure that the specified date is formatted using GNU Date Input Syntax.
