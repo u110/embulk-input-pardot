@@ -61,7 +61,7 @@ public class EmailStatsReporter implements ReporterInterface
         columns.add(new Column(i++, "campaign_cost", Types.LONG));
         columns.add(new Column(i++, "campaign_folder_id", Types.LONG));
         columns.add(new Column(i++, "campaign_name", Types.STRING));
-        columns.add(new Column(i++, "title", Types.STRING));
+        columns.add(new Column(i++, "subject", Types.STRING));
         return columns;
     }
 

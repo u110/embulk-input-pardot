@@ -32,7 +32,7 @@ public class EmailStatsAccessor implements AccessorInterface
             switch (name) {
                 case "list_email_id":
                     return this.listEmailActivity.getListEmailId().toString();
-                case "title":
+                case "subject":
                     return this.listEmailActivity.getDetails().toString();
                 case "campaign_id":
                     if (this.listEmailActivity.getCampaign() == null || this.listEmailActivity.getCampaign().getId() == null) {
