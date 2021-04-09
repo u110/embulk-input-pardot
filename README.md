@@ -18,6 +18,8 @@ Now only 'Querying Visitor Activities' is supported.
 - **app_client_id**: salesforce app-client-id (string, default: `null`)
 - **app_client_secret**: salesforce app-client-secret (string, default: `null`)
 - **business_unit_id**: salesforce business-unit-id (string, default: `null`)
+- **object_type**: salesforce Object
+  - visitor_activities(default), email_stats
 - **created_after**: Selects visitor activities created after the specified time. If a <custom_time> is used, ensure that the specified date is formatted using GNU Date Input Syntax.
   - today, yesterday, last_7_days, this_month, last_month, <custom_time>
 - **created_before**: Selects visitor activities created before the specified time. If a <custom_time> is used, ensure that the specified date is formatted using GNU Date Input Syntax.
@@ -53,18 +55,21 @@ in:
   sort_order: descending
 ```
 
-### With pardot user-key (will be deprecated in spring 2021)
-
-- see https://help.salesforce.com/articleView?id=000353746&type=1&mode=1&language=en_US
+- email_stats
 
 ```yaml
 in:
   type: pardot
   user_name: dummy@example.com
   password: password**
-  user_key: user-key**
+  app_client_id: app-client-id**
+  app_client_secret: app-client-secret**
+  business_unit_id: business-unit-id**
+  object_type: email_stats
   created_after: 2020-12-01
   created_before: 2020-12-02
+  sort_key: created_at
+  sort_order: descending
 ```
 
 
