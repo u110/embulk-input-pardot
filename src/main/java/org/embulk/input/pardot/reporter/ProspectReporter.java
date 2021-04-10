@@ -6,6 +6,7 @@ import com.darksci.pardot.api.request.prospect.ProspectQueryRequest;
 import com.darksci.pardot.api.response.prospect.Prospect;
 import com.darksci.pardot.api.response.prospect.ProspectQueryResponse;
 import com.google.common.collect.ImmutableList;
+import org.embulk.config.ConfigException;
 import org.embulk.input.pardot.PluginTask;
 import org.embulk.input.pardot.accessor.AccessorInterface;
 import org.embulk.input.pardot.accessor.ProspectAccessor;
@@ -140,6 +141,9 @@ public class ProspectReporter implements ReporterInterface
 
     public ProspectQueryRequest buildQueryRequest()
     {
+        if (task.getActivityTypeIds().isPresent()) {
+            throw new ConfigException("cannot set activity_ids with using object: `prospect`");
+        }
         ProspectQueryRequest req = new ProspectQueryRequest();
         if (task.getFetchRowLimit().isPresent()) {
             req = req.withLimit(task.getFetchRowLimit().get());

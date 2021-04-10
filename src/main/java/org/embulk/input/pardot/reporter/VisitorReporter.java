@@ -6,6 +6,7 @@ import com.darksci.pardot.api.request.visitor.VisitorQueryRequest;
 import com.darksci.pardot.api.response.visitor.Visitor;
 import com.darksci.pardot.api.response.visitor.VisitorQueryResponse;
 import com.google.common.collect.ImmutableList;
+import org.embulk.config.ConfigException;
 import org.embulk.input.pardot.PluginTask;
 import org.embulk.input.pardot.accessor.AccessorInterface;
 import org.embulk.input.pardot.accessor.VisitorAccessor;
@@ -107,6 +108,9 @@ public class VisitorReporter implements ReporterInterface
 
     public VisitorQueryRequest buildQueryRequest()
     {
+        if (task.getActivityTypeIds().isPresent()) {
+            throw new ConfigException("cannot set activity_ids with using object: `visitor`");
+        }
         VisitorQueryRequest req = new VisitorQueryRequest();
         if (task.getFetchRowLimit().isPresent()) {
             req = req.withLimit(task.getFetchRowLimit().get());

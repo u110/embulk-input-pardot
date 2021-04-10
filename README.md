@@ -19,7 +19,7 @@ Now only 'Querying Visitor Activities' is supported.
 - **app_client_secret**: salesforce app-client-secret (string, default: `null`)
 - **business_unit_id**: salesforce business-unit-id (string, default: `null`)
 - **object_type**: salesforce Object
-  - visitor_activity(default), email_stats
+  - visitor_activity(default), email_stats, email(from visitor activities), visitor, prospect
 - **created_after**: Selects visitor activities created after the specified time. If a <custom_time> is used, ensure that the specified date is formatted using GNU Date Input Syntax.
   - today, yesterday, last_7_days, this_month, last_month, <custom_time>
 - **created_before**: Selects visitor activities created before the specified time. If a <custom_time> is used, ensure that the specified date is formatted using GNU Date Input Syntax.
@@ -39,6 +39,8 @@ see API document
 
 ### With salesforce client ID / secret
 
+
+- visitor activity
 ```yaml
 in:
   type: pardot
@@ -72,6 +74,56 @@ in:
   sort_order: descending
 ```
 
+- email
+
+```yaml
+in:
+  type: pardot
+  user_name: dummy@example.com
+  password: password**
+  app_client_id: app-client-id**
+  app_client_secret: app-client-secret**
+  business_unit_id: business-unit-id**
+  object_type: email
+  created_after: 2020-12-01
+  created_before: 2020-12-02
+  sort_key: created_at
+  sort_order: descending
+```
+
+
+- prospect
+
+```yaml
+in:
+  type: pardot
+  user_name: dummy@example.com
+  password: password**
+  app_client_id: app-client-id**
+  app_client_secret: app-client-secret**
+  business_unit_id: business-unit-id**
+  object_type: prospect
+  created_after: 2020-12-01
+  created_before: 2020-12-02
+  sort_key: created_at
+  sort_order: descending
+```
+- visitor
+
+```yaml
+in:
+  type: pardot
+  user_name: dummy@example.com
+  password: password**
+  app_client_id: app-client-id**
+  app_client_secret: app-client-secret**
+  business_unit_id: business-unit-id**
+  object_type: visitor
+  created_after: 2020-12-01
+  created_before: 2020-12-02
+  sort_key: created_at
+  sort_order: descending
+```
 
 ## Build
 
