@@ -66,6 +66,7 @@ public class PardotInputPlugin
         PluginTask task = taskSource.loadTask(PluginTask.class);
         final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output);
         final PardotClient pardotClient = getClient(task);
+        reporter = ReporterBuilder.create(task);
 
         Integer totalResults;
         Integer rowIndex = 0;
